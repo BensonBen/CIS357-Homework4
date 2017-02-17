@@ -25,26 +25,34 @@ class ViewController: UIViewController, SettingsViewControllerDelegate {
     var coordinate0: CLLocation!;
     var coordinate1: CLLocation!;
     
-    var distanceType: String = ""
+    var distanceType: String?
     
-    var bearingType: String = ""
+    var bearingType: String?
     
     var isDegrees: Bool = true;
     
     var isKilometers: Bool = true;
     
     func changeUnits(distanceType distanceUnits: String, bearingType bearingUnits: String){
-        print(distanceUnits)
-        print(bearingUnits)
-        print("pens")
+        if distanceType == "Kilometers"{
+            isKilometers = true
+        }
+        else{
+            isKilometers = false
+        }
+        if bearingType == "Degrees"{
+            isDegrees = true
+        }else{
+            isDegrees = false
+        }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destVC = segue.destination.childViewControllers[0] as? SettingsViewController{
+            destVC.delegate = self
             self.bearingType = destVC.bearingType
             self.distanceType = destVC.distanceType
-            print(bearingType)
-            print(distanceType)
+            changeUnits(distanceType: self.bearingType!, bearingType: self.distanceType!)
         }
         
     }
@@ -72,12 +80,19 @@ class ViewController: UIViewController, SettingsViewControllerDelegate {
     
     func calculateDistance() {
         let distance = coordinate0.distance(from: coordinate1);
-        let km = distance/1000;
-        
+        var km = distance/1000;
+        if !isKilometers {
+            km = km * 0.621;
+        }
         let multiplier = pow(10.0, 2.0)
         let rounded = round(km * multiplier) / multiplier
         
-        distanceTextField.text = "Distance: \(rounded) km";
+        if isKilometers{
+            distanceTextField.text = "Distance: \(rounded) km";
+        }
+        else{
+            distanceTextField.text = "Distance: \(rounded) miles";
+        }
     }
     
     func convertRadsToDegrees(radians: Double) -> Double {
@@ -88,11 +103,12 @@ class ViewController: UIViewController, SettingsViewControllerDelegate {
 //Credit: http://stackoverflow.com/questions/26998029/calculating-bearing-between-two-cllocation-points-in-swift
         let x = self.coordinate0.coordinate.longitude - self.coordinate1.coordinate.longitude
         let y = self.coordinate0.coordinate.latitude - self.coordinate1.coordinate.latitude
-        let angle: Double = fmod(convertRadsToDegrees(radians: atan2(y, x)), 360.0) + 90.0;
+        var angle: Double = fmod(convertRadsToDegrees(radians: atan2(y, x)), 360.0) + 90.0;
         
+        angle = angle * 17.777777777778
         let multiplier = pow(10.0, 2.0)
         let rounded = round(angle * multiplier) / multiplier
-        bearingTextField.text = "Bearing: "+String(rounded);
+        
     }
     
     func degreesToRadians(degrees: Double) -> Double { return degrees * M_PI / 180.0 }
@@ -111,18 +127,24 @@ class ViewController: UIViewController, SettingsViewControllerDelegate {
         let radiansBearing = atan2(y, x)
         
         
-        let bearing = convertRadsToDegrees(radians:radiansBearing)
+        var bearing = convertRadsToDegrees(radians:radiansBearing)
+        if !isDegrees{
+            bearing = bearing * 17.777777777778
+        }
         let multiplier = pow(10.0, 2.0)
         let rounded = round(bearing * multiplier) / multiplier
         
-        bearingTextField.text = "Bearing: \(rounded)°";
-        
+        if isDegrees{
+            bearingTextField.text = "Bearing: "+String(rounded)+"°";
+        }
+        else{
+            bearingTextField.text = "Bearing: "+String(rounded) + "mils.";
+        }
     }
     
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         //Looks for single or multiple taps.
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismissKeyboard")
         

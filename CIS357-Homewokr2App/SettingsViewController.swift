@@ -37,10 +37,13 @@ class SettingsViewController: UIViewController, UIPickerViewDelegate, UIPickerVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        pickerOutlet.isHidden = true;
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismissPicker")
         self.pickerOutlet.delegate = self
         self.pickerOutlet.dataSource = self
         self.pickerData =  ["Kilometers","Miles"]
         // Do any additional setup after loading the view.
+        view.addGestureRecognizer(tap)
     }
 
     @IBAction func distUnitsPressed(_ sender: Any) {
@@ -68,6 +71,10 @@ class SettingsViewController: UIViewController, UIPickerViewDelegate, UIPickerVi
     // The number of columns of data
     func numberOfComponentsInPickerView(pickerView: UIPickerView) -> Int {
         return 1
+    }
+    
+    func dismissPicker(){
+        self.pickerOutlet.isHidden = true
     }
     
     @available(iOS 2.0, *)
